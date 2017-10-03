@@ -1,11 +1,35 @@
+//! Strengths of the strongest paths
+//!
+//! # Example
+//!
+//! ```ignore("FIXME: move to crate documentation and run test (Paths::new is private)")
+//! // get number of voters that prefer candidate 2 over 1
+//! assert_eq!(paths.path(2, 1), 3);
+//!
+//! // iterate over all paths
+//! assert_eq!(
+//!     &paths.iter().collect::<Vec<_>>(),
+//!     &[
+//!         (0, 1, 8), // 8 voters prefer candidate 0 over 1
+//!         (0, 2, 5),
+//!         (1, 0, 7),
+//!         (1, 2, 9),
+//!         (2, 0, 2),
+//!         (2, 1, 3)
+//!     ]
+//! );
+//! ```
+
 use std::slice;
 
+/// Strengths of the strongest paths
 pub struct Paths {
     candidates: usize,
     paths: Vec<u32>,
 }
 
 impl Paths {
+    /// Create storage for holding the strengths of strongest paths for N candidates
     pub(crate) fn new(candidates: usize) -> Self {
         Paths {
             candidates,
@@ -13,21 +37,47 @@ impl Paths {
         }
     }
 
+    /// Return the strength of the strongest path between candidate `to` and candidate `from`
+    ///
+    /// Returns the total number of voters that prefer candidate `to` over candidate `from`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `to == from` and if `to` or `from` is out of range.
     pub fn path(&self, to: usize, from: usize) -> u32 {
         assert_ne!(to, from, "candidates have no preference to themselves");
         self.paths[to * self.candidates + from]
     }
 
+    /// Return the strength of the strongest path between candidate `to` and candidate `from`
+    ///
+    /// Returns a mutable reference to the total number of voters that prefer candidate `to`
+    /// over candidate `from`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `to == from` and if `to` or `from` is out of range.
     pub(crate) fn mut_path(&mut self, to: usize, from: usize) -> &mut u32 {
         assert_ne!(to, from, "candidates have no preference to themselves");
         &mut self.paths[to * self.candidates + from]
     }
 
+    /// Iterator over the strengths of all paths
+    ///
+    /// The iterators yields tuples in the form `(to, from, strength)` where
+    /// `strength` is the number of voters that prefer candidate `to` over
+    /// candidate `from`.
+    ///
+    /// The items are sorted ascending, first by `to` then by `from`. For
+    /// instance, when there are three candidates, the sorting looks like this:
+    /// `(0, 1, _)`, `(0, 2, _)`, `(1, 0, _)`, `(1, 2, _)`, `(2, 0, _)` and
+    /// then `(2, 1, _)`.
     pub fn iter(&self) -> PathIter {
         PathIter::new(self)
     }
 }
 
+/// Iterator over `Paths`
 pub struct PathIter<'a> {
     max_candidates: usize,
     paths: slice::Iter<'a, u32>,
@@ -64,13 +114,11 @@ impl<'a> Iterator for PathIter<'a> {
             self.increase_count();
         }
 
-        if let Some(value) = self.paths.next() {
-            let path = Some((self.to, self.from, *value));
+        self.paths.next().map(|value| {
+            let path = (self.to, self.from, *value);
             self.increase_count();
             path
-        } else {
-            None
-        }
+        })
     }
 }
 
@@ -94,9 +142,8 @@ mod tests {
         assert_eq!(paths.path(1, 0), 2);
         assert_eq!(paths.path(2, 1), 5);
 
-        let paths_is: Vec<_> = paths.iter().collect();
         assert_eq!(
-            &paths_is,
+            &paths.iter().collect::<Vec<_>>(),
             &[
                 (0, 1, 0),
                 (0, 2, 1),
