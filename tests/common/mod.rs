@@ -15,12 +15,8 @@ pub fn extract_paths(result: &ElectionResult) -> Vec<(char, char, u32)> {
     let mut paths: Vec<_> = result
         .paths()
         .iter()
-        .map(|(&(to, from), pref)| {
-            (
-                (to as u8 + b'A') as char,
-                (from as u8 + b'A') as char,
-                *pref,
-            )
+        .map(|(to, from, pref)| {
+            ((to as u8 + b'A') as char, (from as u8 + b'A') as char, pref)
         })
         .collect();
     paths.sort_unstable();

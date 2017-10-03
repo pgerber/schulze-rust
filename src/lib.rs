@@ -2,9 +2,11 @@
 #![cfg_attr(feature="clippy", plugin(clippy))]
 #![cfg_attr(all(test, feature = "unstable"), feature(test))]
 
+pub mod paths;
+
+use paths::Paths;
 use std::clone::Clone;
 use std::cmp::{max, min, Ordering};
-use std::collections::HashMap;
 
 
 pub struct Nomination {
@@ -76,7 +78,7 @@ impl Election {
     pub fn result(&self) -> ElectionResult {
         let paths = self.find_strongest_paths();
         let mut ranking: Vec<_> = (0_usize..self.candidates.len()).collect();
-        ranking.sort_unstable_by(|s, o| paths[&(*o, *s)].cmp(&paths[&(*s, *o)]));
+        ranking.sort_unstable_by(|s, o| paths.path(*o, *s).cmp(&paths.path(*s, *o)));
         let ranked_candidates: Vec<_> = ranking
             .iter()
             .map(|i| self.candidates[*i].clone())
@@ -88,19 +90,16 @@ impl Election {
         }
     }
 
-    fn find_strongest_paths(&self) -> HashMap<(usize, usize), u32> {
-        let mut result = HashMap::new();
+    fn find_strongest_paths(&self) -> Paths {
+        let mut result = Paths::new(self.candidates.len());
 
         for i in 0..self.candidates.len() {
             for j in 0..self.candidates.len() {
                 if i != j {
                     let preferring_i = self.preference(i, j);
-                    let val = if preferring_i > self.preference(j, i) {
-                        preferring_i
-                    } else {
-                        0
-                    };
-                    result.insert((i, j), val);
+                    if preferring_i > self.preference(j, i) {
+                        *result.mut_path(i, j) = preferring_i;
+                    }
                 }
             }
         }
@@ -110,10 +109,10 @@ impl Election {
                 if i != j {
                     for k in 0..self.candidates.len() {
                         if i != k && j != k {
-                            let j_k = result[&(j, k)];
-                            let j_i = result[&(j, i)];
-                            let i_k = result[&(i, k)];
-                            result.insert((j, k), max(j_k, min(j_i, i_k)));
+                            let j_k = result.path(j, k);
+                            let j_i = result.path(j, i);
+                            let i_k = result.path(i, k);
+                            *result.mut_path(j, k) = max(j_k, min(j_i, i_k));
                         }
                     }
                 }
@@ -217,7 +216,7 @@ impl From<u8> for Vote {
 
 pub struct ElectionResult {
     ranked_candidates: Vec<Candidate>,
-    paths: HashMap<(usize, usize), u32>,
+    paths: Paths,
 }
 
 impl ElectionResult {
@@ -225,11 +224,10 @@ impl ElectionResult {
         &self.ranked_candidates
     }
 
-    pub fn paths(&self) -> &HashMap<(usize, usize), u32> {
+    pub fn paths(&self) -> &Paths {
         &self.paths
     }
 }
-
 
 #[cfg(test)]
 mod tests {
