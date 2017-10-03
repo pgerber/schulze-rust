@@ -108,6 +108,7 @@ mod tests {
         );
     }
 
+    #[test]
     fn exhausted_iterator() {
         let paths = Paths::new(3);
         let mut iter = paths.iter().skip(9);
