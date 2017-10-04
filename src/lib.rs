@@ -2,11 +2,15 @@
 #![cfg_attr(feature="clippy", plugin(clippy))]
 #![cfg_attr(all(test, feature = "unstable"), feature(test))]
 
+pub mod ballot;
 pub mod paths;
+pub mod rank;
 
 use paths::Paths;
+use ballot::Ballot;
+
 use std::clone::Clone;
-use std::cmp::{max, min, Ordering};
+use std::cmp::{max, min};
 
 
 pub struct Nomination {
@@ -51,11 +55,7 @@ impl Election {
     }
 
     pub fn ballot(&mut self) -> &mut Ballot {
-        let ballot = Ballot {
-            name: None,
-            votes: vec![Vote::unranked(); self.candidates.len()],
-        };
-        self.ballots.push(ballot);
+        self.ballots.push(Ballot::new(self.candidates.len(), None));
         self.ballots.last_mut().unwrap()
     }
 
@@ -63,11 +63,10 @@ impl Election {
     where
         T: ToString,
     {
-        let ballot = Ballot {
-            name: Some(name.to_string()),
-            votes: vec![Vote::unranked(); self.candidates.len()],
-        };
-        self.ballots.push(ballot);
+        self.ballots.push(Ballot::new(
+            self.candidates.len(),
+            Some(name.to_string()),
+        ));
         self.ballots.last_mut().unwrap()
     }
 
@@ -125,7 +124,7 @@ impl Election {
     fn preference(&self, i: usize, j: usize) -> u32 {
         self.ballots
             .iter()
-            .filter(|b| b.votes()[i] > b.votes()[j])
+            .filter(|b| b.get_rank(i) > b.get_rank(j))
             .count() as u32
     }
 }
@@ -138,79 +137,6 @@ pub struct Candidate {
 impl Candidate {
     pub fn name(&self) -> &str {
         &self.name
-    }
-}
-
-#[derive(Debug)]
-pub struct Ballot {
-    name: Option<String>,
-    votes: Vec<Vote>,
-}
-
-impl Ballot {
-    pub fn name(&self) -> Option<&str> {
-        self.name.as_ref().map(String::as_str)
-    }
-
-    pub fn vote(&mut self, id: usize, rank: Vote) -> &mut Self {
-        self.votes[id] = rank;
-        self
-    }
-
-    pub fn votes(&self) -> &[Vote] {
-        &self.votes
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Vote {
-    rank: Option<u8>,
-}
-
-impl Vote {
-    pub fn new(rank: Option<u8>) -> Self {
-        Vote { rank }
-    }
-
-    pub fn ranked(rank: u8) -> Self {
-        Vote { rank: Some(rank) }
-    }
-
-    pub fn unranked() -> Self {
-        Vote { rank: None }
-    }
-
-    fn rank(&self) -> Option<u8> {
-        self.rank
-    }
-}
-
-impl PartialOrd for Vote {
-    fn partial_cmp(&self, other: &Vote) -> Option<Ordering> {
-        match (self.rank(), other.rank()) {
-            (Some(s), Some(o)) => o.partial_cmp(&s),
-            (Some(_), None) => Some(Ordering::Greater),
-            (None, Some(_)) => Some(Ordering::Less),
-            (None, None) => Some(Ordering::Equal),
-        }
-    }
-}
-
-impl Ord for Vote {
-    fn cmp(&self, other: &Vote) -> Ordering {
-        self.partial_cmp(other).unwrap()
-    }
-}
-
-impl From<Option<u8>> for Vote {
-    fn from(v: Option<u8>) -> Self {
-        Vote::new(v)
-    }
-}
-
-impl From<u8> for Vote {
-    fn from(v: u8) -> Self {
-        Vote::new(Some(v))
     }
 }
 
@@ -235,61 +161,8 @@ mod tests {
     extern crate test;
 
     use super::*;
-
-    #[test]
-    fn ballots() {
-        let mut nomination = Nomination::new();
-        nomination
-            .nominate("Peter Gerber")
-            .nominate("Jane Doe")
-            .nominate("Andrew Smith");
-        let mut election = nomination.build();
-
-        election
-            .ballot()
-            .vote(0, 15.into())
-            .vote(1, 25.into())
-            .vote(2, 0.into());
-
-        election.ballot().vote(0, Some(5).into()).vote(
-            1,
-            None.into(),
-        );
-
-        election.ballot().vote(0, 0.into()).vote(1, 1.into()).vote(
-            2,
-            0.into(),
-        );
-
-        assert!(election.candidates().iter().map(|c| c.name()).eq(
-            &[
-                "Peter Gerber".to_string(),
-                "Jane Doe".to_string(),
-                "Andrew Smith".to_string(),
-            ],
-        ));
-
-        let shall = &[
-            vec![Some(15), Some(25), Some(0)],
-            vec![Some(5), None, None],
-            vec![Some(0), Some(1), Some(0)],
-        ];
-        let is: Vec<_> = election
-            .ballots()
-            .iter()
-            .map(|b| b.votes().iter().map(|v| v.rank()).collect::<Vec<_>>())
-            .collect();
-        assert_eq!(&shall, &is.as_slice());
-    }
-
-    #[test]
-    fn vote_partial_cmp() {
-        assert_eq!(Vote::from(5), Vote::from(5));
-        assert!(Vote::from(5) > Vote::from(15));
-        assert!(Vote::from(5) > Vote::from(None));
-        assert!(Vote::from(None) < Vote::from(15));
-        assert_eq!(Vote::from(None), Vote::from(None));
-    }
+    use rank::SimpleRank;
+    use Nomination;
 
     #[bench]
     #[cfg(feature = "unstable")]
@@ -305,7 +178,7 @@ mod tests {
         for i in 0..ballots_count {
             let ballot = election.ballot();
             for j in 0..nomination_count {
-                ballot.vote(j as usize, Vote::from(((i + j) % 50) as u8));
+                ballot.rank(j as usize, SimpleRank::from(((i + j) % 50) as u8));
             }
         }
 

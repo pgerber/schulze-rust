@@ -2,11 +2,11 @@
 
 use schulze::*;
 
-pub fn vote(election: &mut Election, count: u32, votes: &str) {
+pub fn rank(election: &mut Election, count: u32, ranks: &str) {
     for _ in 0..count {
         let ballot = election.ballot();
-        for (i, v) in votes.as_bytes().iter().enumerate() {
-            ballot.vote((v - b'A') as usize, Vote::from(i as u8));
+        for (i, v) in ranks.as_bytes().iter().enumerate() {
+            ballot.rank((v - b'A') as usize, (i as u8).into());
         }
     }
 }

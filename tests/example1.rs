@@ -19,14 +19,14 @@ fn example1() {
         .nominate("E");
     let mut election = nomination.build();
 
-    vote(&mut election, 5, "ACBED");
-    vote(&mut election, 5, "ADECB");
-    vote(&mut election, 8, "BEDAC");
-    vote(&mut election, 3, "CABED");
-    vote(&mut election, 7, "CAEBD");
-    vote(&mut election, 2, "CBADE");
-    vote(&mut election, 7, "DCEBA");
-    vote(&mut election, 8, "EBADC");
+    rank(&mut election, 5, "ACBED");
+    rank(&mut election, 5, "ADECB");
+    rank(&mut election, 8, "BEDAC");
+    rank(&mut election, 3, "CABED");
+    rank(&mut election, 7, "CAEBD");
+    rank(&mut election, 2, "CBADE");
+    rank(&mut election, 7, "DCEBA");
+    rank(&mut election, 8, "EBADC");
 
     assert_eq!(election.candidates().len(), 5);
     assert_eq!(election.ballots().len(), 45);
