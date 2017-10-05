@@ -3,6 +3,7 @@
 #![cfg_attr(all(test, feature = "unstable"), feature(test))]
 
 pub mod ballot;
+pub mod nomination;
 pub mod paths;
 pub mod rank;
 
@@ -11,39 +12,6 @@ use ballot::Ballot;
 
 use std::clone::Clone;
 use std::cmp::{max, min};
-
-
-pub struct Nomination {
-    candidates: Vec<Candidate>,
-}
-
-impl Nomination {
-    #[cfg_attr(feature = "clippy", allow(new_without_default_derive))]
-    pub fn new() -> Self {
-        Nomination { candidates: Vec::new() }
-    }
-
-    pub fn nominate<T>(&mut self, name: T) -> &mut Self
-    where
-        T: ToString,
-    {
-        let candidate = Candidate { name: name.to_string() };
-        assert!(
-            !self.candidates.contains(&candidate),
-            "can't add candidate {:?} that name is already used",
-            candidate.name
-        );
-        self.candidates.push(candidate);
-        self
-    }
-
-    pub fn build(self) -> Election {
-        Election {
-            candidates: self.candidates,
-            ballots: Vec::new(),
-        }
-    }
-}
 
 pub struct Election {
     candidates: Vec<Candidate>,
@@ -163,7 +131,7 @@ mod tests {
 
     use super::*;
     use rank::SimpleRank;
-    use Nomination;
+    use nomination::Nomination;
 
     #[bench]
     #[cfg(feature = "unstable")]

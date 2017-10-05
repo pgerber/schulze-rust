@@ -92,7 +92,7 @@ impl<R> Ballot<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use Nomination;
+    use nomination::Nomination;
 
     #[test]
     fn ballots() {

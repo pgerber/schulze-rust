@@ -3,7 +3,7 @@ extern crate schulze;
 mod common;
 
 use common::*;
-use schulze::*;
+use schulze::nomination::Nomination;
 
 #[test]
 /// [Example 4] from Electorama wiki
