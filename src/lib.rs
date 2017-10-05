@@ -18,6 +18,7 @@ pub struct Nomination {
 }
 
 impl Nomination {
+    #[cfg_attr(feature = "clippy", allow(new_without_default_derive))]
     pub fn new() -> Self {
         Nomination { candidates: Vec::new() }
     }

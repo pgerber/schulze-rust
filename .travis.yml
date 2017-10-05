@@ -1,0 +1,17 @@
+language: rust
+dist: trusty
+rust:
+  - stable
+  - beta
+  - nightly
+matrix:
+  allow_failures:
+    - rust: nightly
+script:
+  # not on nightly
+  - '[[ "$TRAVIS_RUST_VERSION" = "nightly" ]] || cargo rustc --lib --verbose -- -D warnings'
+  - '[[ "$TRAVIS_RUST_VERSION" = "nightly" ]] || cargo test --verbose'
+
+  # nightly only
+  - '[[ "$TRAVIS_RUST_VERSION" != "nightly" ]] || cargo rustc --lib --verbose --features clippy -- -D warnings'
+  - '[[ "$TRAVIS_RUST_VERSION" != "nightly" ]] || cargo test --verbose --features clippy,unstable'
