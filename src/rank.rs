@@ -97,24 +97,24 @@ impl From<u8> for SimpleRank {
     }
 }
 
-#[cfg(tests)]
-mod test {
+#[cfg(test)]
+mod tests {
     use super::*;
 
     #[test]
     fn vote_set_get() {
-        let vote = Rank::new(Some(3));
-        assert_eq!(vote.get_vote(), Some(3));
-        vote.set_vote(None);
-        assert_eq!(vote.get_vote(), None);
+        let mut rank = SimpleRank::new(Some(3));
+        assert_eq!(rank.get_rank(), Some(3));
+        rank.set_rank(None);
+        assert_eq!(rank.get_rank(), None);
     }
 
     #[test]
     fn vote_partial_cmp() {
-        assert_eq!(SimpleRank::from(5), SimpleRank::from(5));
+        assert!(SimpleRank::from(5) == SimpleRank::from(5));
         assert!(SimpleRank::from(5) > SimpleRank::from(15));
         assert!(SimpleRank::from(5) > SimpleRank::from(None));
         assert!(SimpleRank::from(None) < SimpleRank::from(15));
-        assert_eq!(SimpleRank::from(None), SimpleRank::from(None));
+        assert!(SimpleRank::from(None) == SimpleRank::from(None));
     }
 }
