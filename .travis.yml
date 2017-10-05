@@ -7,6 +7,19 @@ rust:
 matrix:
   allow_failures:
     - rust: nightly
+env: RUSTFLAGS="-C link-dead-code"
+addons:
+  apt:
+    packages:
+      # for codecov code coverage
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - cmake
+      - gcc
+      - binutils-dev
+      - libiberty-dev
+      - zlib1g-dev
 script:
   # not on nightly
   - '[[ "$TRAVIS_RUST_VERSION" = "nightly" ]] || cargo rustc --lib --verbose -- -D warnings'
@@ -15,3 +28,24 @@ script:
   # nightly only
   - '[[ "$TRAVIS_RUST_VERSION" != "nightly" ]] || cargo rustc --lib --verbose --features clippy -- -D warnings'
   - '[[ "$TRAVIS_RUST_VERSION" != "nightly" ]] || cargo test --verbose --features clippy,unstable'
+after_success: |
+  # code coverage
+  if [[ "$TRAVIS_RUST_VERSION" = "stable" ]]; then
+      wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
+      tar xzf master.tar.gz &&
+      cd kcov-master &&
+      mkdir build &&
+      cd build &&
+      cmake .. &&
+      make &&
+      sudo make install &&
+      cd ../.. &&
+      rm -rf kcov-master &&
+      for file in target/debug/*-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]; do
+          mkdir -p "target/cov/$(basename $file)" || err=true
+          kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file" || err=true;
+      done &&
+      [[ "${err-}" != "true" ]] &&
+      bash <(curl -s https://codecov.io/bash) &&
+      echo "Uploaded code coverage"
+  fi
