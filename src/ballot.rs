@@ -104,20 +104,21 @@ mod tests {
         let mut election = nomination.build();
 
         election
-            .ballot()
+            .new_ballot()
             .rank(0, 15.into())
             .rank(1, 25.into())
             .rank(2, 0.into());
 
-        election.ballot().rank(0, Some(5).into()).rank(
+        election.new_ballot().rank(0, Some(5).into()).rank(
             1,
             None.into(),
         );
 
-        election.ballot().rank(0, 0.into()).rank(1, 1.into()).rank(
-            2,
-            0.into(),
-        );
+        election
+            .new_ballot()
+            .rank(0, 0.into())
+            .rank(1, 1.into())
+            .rank(2, 0.into());
 
         assert!(election.candidates().iter().map(|c| c.name()).eq(
             &[

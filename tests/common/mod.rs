@@ -4,7 +4,7 @@ use schulze::*;
 
 pub fn rank(election: &mut Election, count: u32, ranks: &str) {
     for _ in 0..count {
-        let ballot = election.ballot();
+        let ballot = election.new_ballot();
         for (i, v) in ranks.as_bytes().iter().enumerate() {
             ballot.rank((v - b'A') as usize, (i as u8).into());
         }

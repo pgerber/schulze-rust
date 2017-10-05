@@ -1,3 +1,43 @@
+//! # Implementation of the Schulze Method
+//!
+//! # Example
+//!
+//! ```
+//! use schulze::Nomination;
+//!
+//  // nominate candidates and create election
+//! let mut nomination = Nomination::new();
+//! nomination
+//!     .nominate("Ivy Winter")    // candidate 0
+//!     .nominate("Lena Summer")   // candidate 1
+//!     .nominate("Lea Tanner");   // candidate 2
+//! let mut election = nomination.build();
+//!
+//! // fill in first ballot
+//! election.new_ballot()
+//!     .rank(0, 3.into())     // rank candidate 0
+//!     .rank(1, 1.into())     // rank candidate 1
+//!     .rank(2, 2.into());    // rank candidate 2
+//!
+//! // fill in second ballot
+//! election.new_ballot()
+//!     .rank(0, None.into())
+//!     .rank(1, Some(1).into())
+//!     .rank(2, Some(1).into());
+//!
+//! // fill in third ballot
+//! election.new_ballot()
+//!     // .rank(None.into()).into()) // None is default
+//!     .rank(0, 1.into())
+//!     .rank(1, 2.into());
+//!
+//! // get election results
+//! let result = election.result();
+//! assert_eq!(
+//!     &result.ranked_candidates().iter().map(|c| c.name()).collect::<Vec<_>>(),
+//!     &["Lena Summer", "Lea Tanner", "Ivy Winter"]); // Lena 1st, Lea 2nd and Ivy 3rd
+//! ```
+
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![cfg_attr(feature="clippy", plugin(clippy))]
 #![cfg_attr(all(test, feature = "unstable"), feature(test))]
@@ -6,6 +46,8 @@ pub mod ballot;
 pub mod nomination;
 pub mod paths;
 pub mod rank;
+
+pub use nomination::Nomination;
 
 use paths::Paths;
 use ballot::Ballot;
@@ -23,7 +65,7 @@ impl Election {
         &self.candidates
     }
 
-    pub fn ballot(&mut self) -> &mut Ballot {
+    pub fn new_ballot(&mut self) -> &mut Ballot {
         self.ballots.push(Ballot::new(self.candidates.len(), None));
         self.ballots.last_mut().unwrap()
     }
@@ -145,7 +187,7 @@ mod tests {
         let mut election = nomination.build();
 
         for i in 0..ballots_count {
-            let ballot = election.ballot();
+            let ballot = election.new_ballot();
             for j in 0..nomination_count {
                 ballot.rank(j as usize, SimpleRank::from(((i + j) % 50) as u8));
             }
