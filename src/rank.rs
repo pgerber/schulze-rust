@@ -133,6 +133,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ord_max_min")] // will become stable in 1.22
     fn rank_ord() {
         // max when left greater
         assert!(SimpleRank::from(255).max(SimpleRank::from(None)) == SimpleRank::from(255));
