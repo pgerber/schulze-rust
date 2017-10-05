@@ -158,7 +158,8 @@ mod tests {
     #[test]
     fn exhausted_iterator() {
         let paths = Paths::new(3);
-        let mut iter = paths.iter().skip(9);
+        let mut iter = paths.iter().skip(5);
+        assert!(iter.next().is_some());
         assert!(iter.next().is_none());
         assert!(iter.next().is_none());
     }
