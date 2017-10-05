@@ -102,7 +102,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn vote_set_get() {
+    fn rank_set_get() {
         let mut rank = SimpleRank::new(Some(3));
         assert_eq!(rank.get_rank(), Some(3));
         rank.set_rank(None);
@@ -110,11 +110,40 @@ mod tests {
     }
 
     #[test]
-    fn vote_partial_cmp() {
+    fn rank_eq() {
         assert!(SimpleRank::from(5) == SimpleRank::from(5));
-        assert!(SimpleRank::from(5) > SimpleRank::from(15));
-        assert!(SimpleRank::from(5) > SimpleRank::from(None));
-        assert!(SimpleRank::from(None) < SimpleRank::from(15));
+        assert!(SimpleRank::from(5) != SimpleRank::from(15));
         assert!(SimpleRank::from(None) == SimpleRank::from(None));
+        assert!(SimpleRank::from(5) != SimpleRank::from(None));
+    }
+
+    #[test]
+    fn rank_partial_ord() {
+        // left greater
+        assert!(SimpleRank::from(255) > SimpleRank::from(None));
+        assert!(SimpleRank::from(5) > SimpleRank::from(6));
+
+        // left less
+        assert!(!(SimpleRank::from(None) > SimpleRank::from(255)));
+        assert!(!(SimpleRank::from(6) > SimpleRank::from(5)));
+
+        // equal
+        assert!(!(SimpleRank::from(None) > SimpleRank::from(None)));
+        assert!(!(SimpleRank::from(6) > SimpleRank::from(6)));
+    }
+
+    #[test]
+    fn rank_ord() {
+        // max when left greater
+        assert!(SimpleRank::from(255).max(SimpleRank::from(None)) == SimpleRank::from(255));
+        assert!(SimpleRank::from(5).max(SimpleRank::from(6)) == SimpleRank::from(5));
+
+        // min when left greater
+        assert!(SimpleRank::from(255).min(SimpleRank::from(None)) == SimpleRank::from(None));
+        assert!(SimpleRank::from(5).min(SimpleRank::from(6)) == SimpleRank::from(6));
+
+        // equal
+        assert!(SimpleRank::from(None).max(SimpleRank::from(None)) == SimpleRank::from(None));
+        assert!(SimpleRank::from(6).max(SimpleRank::from(6)) == SimpleRank::from(6));
     }
 }
