@@ -110,7 +110,7 @@ impl Election {
     ///
     /// Search for the strongest paths using the Floyd-Warshall algorithm.
     fn find_strongest_paths(&self) -> Paths {
-        let mut paths= Paths::new(self.candidates.len());
+        let mut paths = Paths::new(self.candidates.len());
 
         for i in 0..self.candidates.len() {
             for j in 0..self.candidates.len() {
@@ -217,7 +217,6 @@ mod tests {
     #[cfg(feature = "unstable")]
     extern crate test;
 
-    use super::*;
     use rank::SimpleRank;
     use nomination::Nomination;
 

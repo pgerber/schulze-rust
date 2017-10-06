@@ -79,7 +79,7 @@ impl Paths {
 
 /// Iterator over `Paths`
 pub struct PathIter<'a> {
-    max_candidates: usize,
+    max_candidate_no: usize,
     paths: slice::Iter<'a, u32>,
     to: usize,
     from: usize,
@@ -88,7 +88,7 @@ pub struct PathIter<'a> {
 impl<'a> PathIter<'a> {
     fn new(paths: &'a Paths) -> PathIter<'a> {
         PathIter {
-            max_candidates: paths.candidates - 1,
+            max_candidate_no: paths.candidates - 1,
             paths: paths.paths.iter(),
             to: 0,
             from: 0,
@@ -96,7 +96,7 @@ impl<'a> PathIter<'a> {
     }
 
     fn increase_count(&mut self) {
-        if self.from == self.max_candidates {
+        if self.from == self.max_candidate_no {
             self.to += 1;
             self.from = 0;
         } else {
@@ -120,7 +120,14 @@ impl<'a> Iterator for PathIter<'a> {
             path
         })
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let size = (self.max_candidate_no + 1) * self.max_candidate_no;
+        (size, Some(size))
+    }
 }
+
+impl<'a> ExactSizeIterator for PathIter<'a> {}
 
 #[cfg(test)]
 mod tests {
@@ -176,5 +183,14 @@ mod tests {
     fn path_to_self_mut() {
         let mut paths = Paths::new(100);
         paths.mut_path(0, 0);
+    }
+
+    #[test]
+    fn iter_size_hint() {
+        let paths = Paths::new(20);
+        let count = paths.iter().count();
+        assert_eq!(count, paths.iter().size_hint().0);
+        assert_eq!(Some(count), paths.iter().size_hint().1);
+        assert_eq!(count, paths.iter().len());
     }
 }
