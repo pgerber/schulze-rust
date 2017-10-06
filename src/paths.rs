@@ -62,7 +62,7 @@ impl Paths {
         &mut self.paths[to * self.candidates + from]
     }
 
-    /// Iterator over the strengths of all paths
+    /// Iterator over the strengths of all paths.
     ///
     /// The iterators yields tuples in the form `(to, from, strength)` where
     /// `strength` is the number of voters that prefer candidate `to` over

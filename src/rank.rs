@@ -97,6 +97,18 @@ impl From<u8> for SimpleRank {
     }
 }
 
+impl<'a> From<&'a Option<u8>> for SimpleRank {
+    fn from(v: &'a Option<u8>) -> Self {
+        SimpleRank::new(*v)
+    }
+}
+
+impl<'a> From<&'a u8> for SimpleRank {
+    fn from(v: &'a u8) -> Self {
+        SimpleRank::new(Some(*v))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -146,5 +158,17 @@ mod tests {
         // equal
         assert!(SimpleRank::from(None).max(SimpleRank::from(None)) == SimpleRank::from(None));
         assert!(SimpleRank::from(6).max(SimpleRank::from(6)) == SimpleRank::from(6));
+    }
+
+    #[test]
+    fn simle_rank_from() {
+        let ranks = &[
+            SimpleRank::from(1),
+            SimpleRank::from(&1),
+            SimpleRank::from(Some(1)),
+            SimpleRank::from(&Some(1)),
+        ];
+
+        assert!(ranks.iter().all(|r| r == &SimpleRank::new(Some(1))))
     }
 }

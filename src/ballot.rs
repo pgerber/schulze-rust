@@ -13,22 +13,65 @@ impl<R> Ballot<R> {
     ///
     /// Optionally, a `name` can be used to identify the ballot (i.e. the
     /// voters name).
-    pub fn new(candidates: usize, name: Option<String>) -> Self
+    pub(crate) fn new(candidates: usize) -> Self
     where
         R: Rank,
     {
         Ballot {
-            name: name,
+            name: None,
             ranks: vec![Default::default(); candidates],
         }
+    }
+
+    /// Set a name for the ballot (i.e. the voters name).
+    ///
+    /// ```
+    /// # use schulze::Nomination;
+    /// #
+    /// # let mut nomination = Nomination::new();
+    /// # nomination.nominate("Paul");
+    /// # let mut election = nomination.build();
+    /// # let mut ballot = election.new_ballot();
+    /// ballot.set_name("Ivy O'Neill");
+    /// assert_eq!(ballot.name(), Some("Ivy O'Neill"));
+    /// ```
+    pub fn set_name<T>(&mut self, name: T) -> &mut Self
+    where
+        T: ToString,
+    {
+        self.name = Some(name.to_string());
+        self
+    }
+
+    /// Unset the name of the ballot.
+    ///
+    /// ```
+    /// # use schulze::Nomination;
+    /// #
+    /// # let mut nomination = Nomination::new();
+    /// # nomination.nominate("Paul");
+    /// # let mut election = nomination.build();
+    /// # let mut ballot = election.new_ballot();
+    /// # ballot.set_name("Ivy O'Neill");
+    /// assert_eq!(ballot.name(), Some("Ivy O'Neill"));
+    /// ballot.unset_name();
+    /// assert_eq!(ballot.name(), None);
+    /// ```
+    pub fn unset_name(&mut self) -> &mut Self {
+        self.name = None;
+        self
     }
 
     /// Retrieve the name of the ballot.
     ///
     /// ```
-    /// use schulze::ballot::Ballot;
-    ///
-    /// let ballot: Ballot = Ballot::new(5, Some("Ivy O'Neill".to_string()));
+    /// # use schulze::Nomination;
+    /// #
+    /// # let mut nomination = Nomination::new();
+    /// # nomination.nominate("Paul");
+    /// # let mut election = nomination.build();
+    /// # let mut ballot = election.new_ballot();
+    /// ballot.set_name("Ivy O'Neill");
     /// assert_eq!(ballot.name(), Some("Ivy O'Neill"));
     /// ```
     pub fn name(&self) -> Option<&str> {
@@ -38,28 +81,84 @@ impl<R> Ballot<R> {
     /// Rank candidate with `id`.
     ///
     /// ```
-    /// use schulze::ballot::Ballot;
-    ///
-    /// let mut ballot: Ballot = Ballot::new(5, None);
-    /// ballot.rank(2, 15.into());
-    /// assert!(ballot.get_rank(2) == &15.into());
+    /// # use schulze::Nomination;
+    /// #
+    /// # let mut n = Nomination::new();
+    /// # n.nominate("Paul");
+    /// # let mut e = n.build();
+    /// # let mut ballot = e.new_ballot();
+    /// #
+    /// // set rank 5 on candidate 0
+    /// ballot.rank(0, 5);
     /// ```
-    pub fn rank(&mut self, id: usize, rank: R) -> &mut Self
+    pub fn rank<T>(&mut self, id: usize, rank: T) -> &mut Self
     where
         R: Rank,
+        T: Into<R>,
     {
-        self.ranks[id] = rank;
+        self.ranks[id] = rank.into();
+        self
+    }
+
+    /// Set ranks for all candidates
+    ///
+    /// # Panics
+    ///
+    /// Panics if `ranks` doesn't yield exactly one `Rank` per candidate.
+    ///
+    /// # Example
+    /// ```
+    /// # use schulze::Nomination;
+    /// #
+    /// # let mut nomination = Nomination::new();
+    /// # nomination.nominate("Joe");
+    /// # nomination.nominate("Zoe");
+    /// # nomination.nominate("Ivy");
+    /// # let mut election = nomination.build();
+    /// # let ballot = election.new_ballot();
+    /// // rank all three candidates at once
+    /// ballot.rank_all(&[4, 7, 3]);
+    ///
+    /// assert!(ballot.get_rank(0) == &4.into());
+    /// assert!(ballot.get_rank(1) == &7.into());
+    /// assert!(ballot.get_rank(2) == &3.into());
+    /// ```
+    pub fn rank_all<T, I>(&mut self, ranks: T) -> &mut Self
+    where
+        R: Rank,
+        T: IntoIterator<Item = I>,
+        I: Into<R>,
+    {
+        let len = self.ranks.len();
+        let mut src_iter = ranks.into_iter();
+        let processed = self.ranks
+            .iter_mut()
+            .zip(src_iter.by_ref().take(len))
+            .map(|(src, dest)| { *src = dest.into(); })
+            .count();
+
+        assert!(
+            self.ranks.len() == processed && src_iter.next().is_none(),
+            "number of ranks must match number of candidates exactly"
+        );
         self
     }
 
     /// Get rank for candidate with `id`.
     ///
     /// ```
-    /// use schulze::ballot::Ballot;
+    /// # use schulze::Nomination;
+    /// #
+    /// # let mut nomination = Nomination::new();
+    /// # nomination.nominate("Paul");
+    /// # let mut election = nomination.build();
+    /// # let mut ballot = election.new_ballot();
+    /// #
+    /// // set rank 5 on candidate 0
+    /// ballot.rank(0, 5);
     ///
-    /// let mut ballot: Ballot = Ballot::new(5, None);
-    /// ballot.rank(2, 15.into());
-    /// assert!(ballot.get_rank(2) == &15.into());
+    /// // get rank of candidate 0
+    /// assert!(ballot.get_rank(0) == &5.into());
     /// ```
     pub fn get_rank(&self, id: usize) -> &R
     where
@@ -73,13 +172,21 @@ impl<R> Ballot<R> {
     /// Candidate with id 0 is `ranks()[0]`, with id 1 `ranks()[1]`, …:
     ///
     /// ```
-    /// # use schulze::ballot::Ballot;
+    /// # use schulze::Nomination;
     /// #
-    /// # let mut ballot: Ballot = Ballot::new(2, None);
-    /// # ballot.rank(0, 5.into());
-    /// # ballot.rank(1, None.into());
-    /// assert!(&ballot.ranks()[0] == ballot.get_rank(0));
-    /// assert!(&ballot.ranks()[1] == ballot.get_rank(1));
+    /// # let mut nomination = Nomination::new();
+    /// # nomination.nominate("Joe");
+    /// # nomination.nominate("Zoe");
+    /// # nomination.nominate("Ivy");
+    /// # let mut election = nomination.build();
+    /// # let mut ballot = election.new_ballot();
+    /// #
+    /// ballot
+    ///     .rank(0, 5)
+    ///     .rank(1, 2)
+    ///     .rank(2, None);
+    ///
+    /// assert!(ballot.ranks() == &[5.into(), 2.into(), None.into()]);
     /// ```
     pub fn ranks(&self) -> &[R]
     where
@@ -92,33 +199,17 @@ impl<R> Ballot<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use election::Election;
     use nomination::Nomination;
 
     #[test]
     fn ballots() {
-        let mut nomination = Nomination::new();
-        nomination
-            .nominate("Peter Gerber")
-            .nominate("Jane Doe")
-            .nominate("Andrew Smith");
-        let mut election = nomination.build();
+        let mut election = create_election();
+        election.new_ballot().rank(0, 15).rank(1, 25).rank(2, 0);
 
-        election
-            .new_ballot()
-            .rank(0, 15.into())
-            .rank(1, 25.into())
-            .rank(2, 0.into());
+        election.new_ballot().rank(0, Some(5)).rank(1, None);
 
-        election.new_ballot().rank(0, Some(5).into()).rank(
-            1,
-            None.into(),
-        );
-
-        election
-            .new_ballot()
-            .rank(0, 0.into())
-            .rank(1, 1.into())
-            .rank(2, 0.into());
+        election.new_ballot().rank(0, 0).rank(1, 1).rank(2, 0);
 
         assert!(election.candidates().iter().map(|c| c.name()).eq(
             &[
@@ -141,5 +232,28 @@ mod tests {
             })
             .collect();
         assert_eq!(&shall, &is.as_slice());
+    }
+
+    #[test]
+    #[should_panic(expected = "number of ranks must match number of candidates exactly")]
+    fn rank_all_too_few_ballots() {
+        let mut election = create_election();
+        election.new_ballot().rank_all(&[1, 2]);
+    }
+
+    #[test]
+    #[should_panic(expected = "number of ranks must match number of candidates exactly")]
+    fn rank_all_too_many_ballots() {
+        let mut election = create_election();
+        election.new_ballot().rank_all(&[1, 2, 3, 4]);
+    }
+
+    fn create_election() -> Election {
+        let mut nomination = Nomination::new();
+        nomination
+            .nominate("Peter Gerber")
+            .nominate("Jane Doe")
+            .nominate("Andrew Smith");
+        nomination.build()
     }
 }

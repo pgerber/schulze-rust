@@ -17,7 +17,8 @@
 //! let election = nomination.build();
 //! ```
 
-use {Candidate, Election};
+use election::Election;
+use Candidate;
 
 /// Nomination of candidates
 pub struct Nomination {
@@ -52,10 +53,7 @@ impl Nomination {
 
     /// Create election
     pub fn build(self) -> Election {
-        Election {
-            candidates: self.candidates,
-            ballots: Vec::new(),
-        }
+        Election::new(self.candidates)
     }
 }
 
@@ -74,7 +72,7 @@ mod tests {
 
         assert_eq!(
             election
-                .candidates
+                .candidates()
                 .iter()
                 .map(|c| c.name())
                 .collect::<Vec<_>>(),
