@@ -146,17 +146,17 @@ mod tests {
 
     #[test]
     fn rank_ord() {
-        // max when left greater
-        assert!(SimpleRank::from(255).max(SimpleRank::from(None)) == SimpleRank::from(255));
-        assert!(SimpleRank::from(5).max(SimpleRank::from(6)) == SimpleRank::from(5));
+        // greater
+        assert_eq!(SimpleRank::from(255).cmp(&SimpleRank::from(None)), Ordering::Greater);
+        assert_eq!(SimpleRank::from(5).cmp(&SimpleRank::from(6)), Ordering::Greater);
 
-        // min when left greater
-        assert!(SimpleRank::from(255).min(SimpleRank::from(None)) == SimpleRank::from(None));
-        assert!(SimpleRank::from(5).min(SimpleRank::from(6)) == SimpleRank::from(6));
+        // less
+        assert_eq!(SimpleRank::from(None).cmp(&SimpleRank::from(255)), Ordering::Less);
+        assert_eq!(SimpleRank::from(6).cmp(&SimpleRank::from(5)), Ordering::Less);
 
         // equal
-        assert!(SimpleRank::from(None).max(SimpleRank::from(None)) == SimpleRank::from(None));
-        assert!(SimpleRank::from(6).max(SimpleRank::from(6)) == SimpleRank::from(6));
+        assert_eq!(SimpleRank::from(None).cmp(&SimpleRank::from(None)), Ordering::Equal);
+        assert_eq!(SimpleRank::from(6).cmp(&SimpleRank::from(6)), Ordering::Equal);
     }
 
     #[test]
