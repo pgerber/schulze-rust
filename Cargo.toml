@@ -10,7 +10,3 @@ license = "GPL-3.0+"
 
 [dependencies]
 clippy = { version = "0.0", optional = true }
-
-[features]
-unstable = ["ord_max_min"]
-ord_max_min = []  # going to be stable in 2.12

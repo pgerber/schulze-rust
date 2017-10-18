@@ -27,7 +27,7 @@ script:
 
   # nightly only
   - '[[ "$TRAVIS_RUST_VERSION" != "nightly" ]] || cargo rustc --lib --verbose --features clippy -- -D warnings'
-  - '[[ "$TRAVIS_RUST_VERSION" != "nightly" ]] || cargo test --verbose --features clippy,unstable'
+  - '[[ "$TRAVIS_RUST_VERSION" != "nightly" ]] || cargo test --verbose --features clippy'
 after_success: |
   # code coverage
   if [[ "$TRAVIS_RUST_VERSION" = "stable" ]]; then
