@@ -37,7 +37,7 @@ impl Nomination {
     /// # Panics
     ///
     /// Panics if `name` has been nominated already.
-    pub fn nominate<T>(&mut self, name: T) -> &mut Self
+    pub fn nominate<T>(&mut self, name: &T) -> &mut Self
     where
         T: ToString,
     {
