@@ -35,7 +35,7 @@ impl<R> Ballot<R> {
     /// ballot.set_name("Ivy O'Neill");
     /// assert_eq!(ballot.name(), Some("Ivy O'Neill"));
     /// ```
-    pub fn set_name<T>(&mut self, name: &T) -> &mut Self
+    pub fn set_name<T>(&mut self, name: T) -> &mut Self
     where
         T: ToString,
     {
