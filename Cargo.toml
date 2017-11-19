@@ -10,3 +10,7 @@ license = "GPL-3.0+"
 
 [dependencies]
 clippy = { version = "0.0", optional = true }
+
+[features]
+fused = []
+unstable = ["fused"]

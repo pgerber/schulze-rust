@@ -20,6 +20,8 @@
 //! );
 //! ```
 
+#[cfg(feature = "fused")]
+use std::iter::FusedIterator;
 use std::slice;
 
 /// Strengths of the strongest paths
@@ -128,6 +130,9 @@ impl<'a> Iterator for PathIter<'a> {
 }
 
 impl<'a> ExactSizeIterator for PathIter<'a> {}
+
+#[cfg(feature = "fused")]
+impl<'a> FusedIterator for PathIter<'a> {}
 
 #[cfg(test)]
 mod tests {

@@ -39,6 +39,7 @@
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![cfg_attr(feature="clippy", plugin(clippy))]
 #![cfg_attr(all(test, feature = "unstable"), feature(test))]
+#![cfg_attr(feature="fused", feature(fused))]
 
 pub mod ballot;
 pub mod election;
