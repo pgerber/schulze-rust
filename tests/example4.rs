@@ -45,17 +45,15 @@ fn example4() {
         ],
     );
 
-    // FIXME: Sorting isn't yet correct when there are multiple possibilities
-    //
-    // assert_ranked_candidates_in(
-    //     &result,
-    //     &[
-    //         &["B", "C", "D", "A"],
-    //         &["B", "D", "A", "C"],
-    //         &["B", "D", "C", "A"],
-    //         &["D", "A", "B", "C"],
-    //         &["D", "B", "A", "C"],
-    //         &["D", "B", "C", "A"],
-    //     ],
-    // );
+    assert_ranked_candidates_in(
+        &result,
+        &[
+            &["B", "C", "D", "A"],
+            &["B", "D", "A", "C"],
+            &["B", "D", "C", "A"],
+            &["D", "A", "B", "C"],
+            &["D", "B", "A", "C"],
+            &["D", "B", "C", "A"],
+        ],
+    );
 }
