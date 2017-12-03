@@ -94,7 +94,7 @@ impl Election {
     pub fn result(&self) -> ElectionResult {
         let paths = self.find_strongest_paths();
         let mut ranking: Vec<_> = (0_usize..self.candidates.len()).collect();
-        ranking.sort_unstable_by(|s, o| paths.path(*o, *s).cmp(&paths.path(*s, *o)));
+        Self::rank_candidates(&mut ranking[..], &paths);
         let ranked_candidates: Vec<_> = ranking
             .iter()
             .map(|i| self.candidates[*i].clone())
@@ -103,6 +103,19 @@ impl Election {
         ElectionResult {
             ranked_candidates,
             paths,
+        }
+    }
+
+    fn rank_candidates(candidates: &mut [usize], paths: &Paths) {
+        for i in 0..candidates.len() {
+            for j in i + 1..candidates.len() {
+                let c1 = candidates[i];
+                let c2 = candidates[j];
+                if paths.path(c1, c2) < paths.path(c2, c1) {
+                    candidates[i] = c2;
+                    candidates[j] = c1;
+                }
+            }
         }
     }
 
@@ -117,7 +130,7 @@ impl Election {
                 if i != j {
                     let preferring_i = self.prefered_by(i, j);
                     if preferring_i > self.prefered_by(j, i) {
-                        *paths.mut_path(i, j) = preferring_i;
+                        *paths.path_mut(i, j) = preferring_i;
                     }
                 }
             }
@@ -131,7 +144,7 @@ impl Election {
                             let j_k = paths.path(j, k);
                             let j_i = paths.path(j, i);
                             let i_k = paths.path(i, k);
-                            *paths.mut_path(j, k) = max(j_k, min(j_i, i_k));
+                            *paths.path_mut(j, k) = max(j_k, min(j_i, i_k));
                         }
                     }
                 }
@@ -217,8 +230,64 @@ mod tests {
     #[cfg(feature = "unstable")]
     extern crate test;
 
+    use super::*;
+    use paths::Paths;
     use rank::SimpleRank;
     use nomination::Nomination;
+
+    const ALL_PERMUTATIONS: &[&[usize]] = &[
+        &[0, 1, 2],
+        &[0, 2, 1],
+        &[1, 0, 2],
+        &[1, 2, 0],
+        &[2, 0, 1],
+        &[2, 1, 0],
+    ];
+
+    #[test]
+    fn ranking_no_ties() {
+        let paths = paths_with_strengths(&[2, 4, 1, 2, 3, 1]);
+        assert_possible_rankings(&paths, &[&[0, 1, 2]]);
+    }
+
+    #[test]
+    fn one_winner_two_tie() {
+        let paths = paths_with_strengths(&[0, 3, 1, 2, 3, 0]);
+        assert_possible_rankings(&paths, &[&[1, 0, 2], &[1, 2, 0]]);
+    }
+
+    #[test]
+    fn all_tie() {
+        // 0 and 1 are tie, 0 outranks 2 but 2 outranks 1
+        let paths = paths_with_strengths(&[2, 3, 2, 3, 2, 2]);
+        assert_possible_rankings(&paths, &[&[0, 1, 2], &[1, 0, 2], &[2, 0, 1], &[2, 1, 0]]);
+    }
+
+    fn paths_with_strengths(ranks: &[u32; 6]) -> Paths {
+        let mut paths = Paths::new(3);
+        *paths.path_mut(0, 1) = ranks[0];
+        *paths.path_mut(0, 2) = ranks[1];
+        *paths.path_mut(1, 0) = ranks[2];
+        *paths.path_mut(1, 2) = ranks[3];
+        *paths.path_mut(2, 0) = ranks[4];
+        *paths.path_mut(2, 1) = ranks[5];
+        paths
+    }
+
+    /// Test if ranking three candidates produces one of the `possible_results`. All permutations
+    /// for the initial state of the slice passed to `Election::rank_candidates` are tried.
+    fn assert_possible_rankings(paths: &Paths, possible_results: &[&[usize]]) {
+        for initial_state in ALL_PERMUTATIONS {
+            let mut ranking = initial_state.to_vec();
+            Election::rank_candidates(&mut ranking[..], paths);
+            assert!(
+                possible_results.contains(&&ranking[..]),
+                "{:?} not in {:?}",
+                ranking,
+                possible_results
+            );
+        }
+    }
 
     #[bench]
     #[cfg(feature = "unstable")]

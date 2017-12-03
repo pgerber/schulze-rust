@@ -59,7 +59,7 @@ impl Paths {
     /// # Panics
     ///
     /// Panics if `to == from` and if `to` or `from` is out of range.
-    pub(crate) fn mut_path(&mut self, to: usize, from: usize) -> &mut u32 {
+    pub(crate) fn path_mut(&mut self, to: usize, from: usize) -> &mut u32 {
         assert_ne!(to, from, "candidates have no preference to themselves");
         &mut self.paths[to * self.candidates + from]
     }
@@ -145,11 +145,11 @@ mod tests {
         assert_eq!(paths.path(1, 0), 0);
         assert_eq!(paths.path(2, 1), 0);
 
-        *paths.mut_path(0, 2) = 1;
-        *paths.mut_path(1, 0) = 2;
-        *paths.mut_path(1, 2) = 3;
-        *paths.mut_path(2, 0) = 4;
-        *paths.mut_path(2, 1) = 5;
+        *paths.path_mut(0, 2) = 1;
+        *paths.path_mut(1, 0) = 2;
+        *paths.path_mut(1, 2) = 3;
+        *paths.path_mut(2, 0) = 4;
+        *paths.path_mut(2, 1) = 5;
 
         assert_eq!(paths.path(1, 0), 2);
         assert_eq!(paths.path(2, 1), 5);
@@ -187,7 +187,7 @@ mod tests {
     #[should_panic(expected = "candidates have no preference to themselves")]
     fn path_to_self_mut() {
         let mut paths = Paths::new(100);
-        paths.mut_path(0, 0);
+        paths.path_mut(0, 0);
     }
 
     #[test]
