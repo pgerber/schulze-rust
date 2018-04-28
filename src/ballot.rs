@@ -30,7 +30,7 @@ impl<R> Ballot<R> {
     /// #
     /// # let mut nomination = Nomination::new();
     /// # nomination.nominate("Paul");
-    /// # let mut election = nomination.build();
+    /// # let mut election = nomination.election();
     /// # let mut ballot = election.new_ballot();
     /// ballot.set_name("Ivy O'Neill");
     /// assert_eq!(ballot.name(), Some("Ivy O'Neill"));
@@ -50,7 +50,7 @@ impl<R> Ballot<R> {
     /// #
     /// # let mut nomination = Nomination::new();
     /// # nomination.nominate("Paul");
-    /// # let mut election = nomination.build();
+    /// # let mut election = nomination.election();
     /// # let mut ballot = election.new_ballot();
     /// # ballot.set_name("Ivy O'Neill");
     /// assert_eq!(ballot.name(), Some("Ivy O'Neill"));
@@ -69,7 +69,7 @@ impl<R> Ballot<R> {
     /// #
     /// # let mut nomination = Nomination::new();
     /// # nomination.nominate("Paul");
-    /// # let mut election = nomination.build();
+    /// # let mut election = nomination.election();
     /// # let mut ballot = election.new_ballot();
     /// ballot.set_name("Ivy O'Neill");
     /// assert_eq!(ballot.name(), Some("Ivy O'Neill"));
@@ -85,7 +85,7 @@ impl<R> Ballot<R> {
     /// #
     /// # let mut n = Nomination::new();
     /// # n.nominate("Paul");
-    /// # let mut e = n.build();
+    /// # let mut e = n.election();
     /// # let mut ballot = e.new_ballot();
     /// #
     /// // set rank 5 on candidate 0
@@ -114,7 +114,7 @@ impl<R> Ballot<R> {
     /// # nomination.nominate("Joe");
     /// # nomination.nominate("Zoe");
     /// # nomination.nominate("Ivy");
-    /// # let mut election = nomination.build();
+    /// # let mut election = nomination.election();
     /// # let ballot = election.new_ballot();
     /// // rank all three candidates at once
     /// ballot.rank_all(&[4, 7, 3]);
@@ -151,7 +151,7 @@ impl<R> Ballot<R> {
     /// #
     /// # let mut nomination = Nomination::new();
     /// # nomination.nominate("Paul");
-    /// # let mut election = nomination.build();
+    /// # let mut election = nomination.election();
     /// # let mut ballot = election.new_ballot();
     /// #
     /// // set rank 5 on candidate 0
@@ -178,7 +178,7 @@ impl<R> Ballot<R> {
     /// # nomination.nominate("Joe");
     /// # nomination.nominate("Zoe");
     /// # nomination.nominate("Ivy");
-    /// # let mut election = nomination.build();
+    /// # let mut election = nomination.election();
     /// # let mut ballot = election.new_ballot();
     /// #
     /// ballot
@@ -254,6 +254,6 @@ mod tests {
             .nominate("Peter Gerber")
             .nominate("Jane Doe")
             .nominate("Andrew Smith");
-        nomination.build()
+        nomination.election()
     }
 }

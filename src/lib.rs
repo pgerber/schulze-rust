@@ -11,7 +11,7 @@
 //!     .nominate("Ivy Winter")    // candidate 0
 //!     .nominate("Lena Summer")   // candidate 1
 //!     .nominate("Lea Tanner");   // candidate 2
-//! let mut election = nomination.build();
+//! let mut election = nomination.election();
 //!
 //! // fill in first ballot
 //! election.new_ballot()

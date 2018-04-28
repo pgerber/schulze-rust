@@ -10,7 +10,7 @@
 //! nomination
 //!     .nominate("John")
 //!     .nominate("Abby");
-//! let _: Election = nomination.build();
+//! let _: Election = nomination.election();
 //! ```
 //!
 //! [`Nomination`]: ../nomination/struct.Nomination.html
@@ -18,16 +18,17 @@
 use ballot::Ballot;
 use Candidate;
 use paths::Paths;
+use rank::{Rank, SimpleRank};
 
 use std::cmp::{max, min};
 
 /// Election
-pub struct Election {
+pub struct Election<R = SimpleRank> {
     candidates: Vec<Candidate>,
-    ballots: Vec<Ballot>,
+    ballots: Vec<Ballot<R>>,
 }
 
-impl Election {
+impl<R: Rank> Election<R> {
     /// Create new election
     pub(crate) fn new(candidates: Vec<Candidate>) -> Self {
         Election {
@@ -46,7 +47,7 @@ impl Election {
     ///     .nominate("May")
     ///     .nominate("June")
     ///     .nominate("Ivy");
-    /// let election = nomination.build();
+    /// let election = nomination.election();
     ///
     /// assert_eq!(
     ///     &election.candidates().iter().map(|c| c.name()).collect::<Vec<_>>(),
@@ -59,7 +60,7 @@ impl Election {
     }
 
     /// Create a new `Ballot`
-    pub fn new_ballot(&mut self) -> &mut Ballot {
+    pub fn new_ballot(&mut self) -> &mut Ballot<R> {
         self.ballots.push(Ballot::new(self.candidates.len()));
         self.ballots.last_mut().unwrap()
     }
@@ -72,7 +73,7 @@ impl Election {
     /// # let mut nomination = Nomination::new();
     /// # nomination
     /// #     .nominate("Ivy");
-    /// # let mut election = nomination.build();
+    /// # let mut election = nomination.election();
     /// #
     /// election.new_ballot()
     ///     .set_name("Juliet")
@@ -82,7 +83,7 @@ impl Election {
     /// assert_eq!(ballots[0].name(), Some("Juliet"));
     /// assert!(ballots[0].get_rank(0) == &5.into());
     /// ```
-    pub fn ballots(&self) -> &[Ballot] {
+    pub fn ballots(&self) -> &[Ballot<R>] {
         &self.ballots
     }
 
@@ -181,7 +182,7 @@ impl ElectionResult {
     /// #     .nominate("Jenny")
     /// #     .nominate("Wilma")
     /// #     .nominate("Donald");
-    /// # let mut election = nomination.build();
+    /// # let mut election = nomination.election();
     /// # election.new_ballot()
     /// #     .rank_all(&[Some(1), Some(0), None]);
     /// let result = election.result();
@@ -206,7 +207,7 @@ impl ElectionResult {
     /// # nomination
     /// #     .nominate("Jenny")
     /// #     .nominate("Wilma");
-    /// # let mut election = nomination.build();
+    /// # let mut election = nomination.election();
     /// election.new_ballot().rank_all(&[1, 0]);
     /// election.new_ballot().rank_all(&[0, 1]);
     /// election.new_ballot().rank_all(&[1, 0]);
@@ -233,7 +234,6 @@ mod tests {
     use super::*;
     use paths::Paths;
     use rank::SimpleRank;
-    use nomination::Nomination;
 
     const ALL_PERMUTATIONS: &[&[usize]] = &[
         &[0, 1, 2],
@@ -279,7 +279,7 @@ mod tests {
     fn assert_possible_rankings(paths: &Paths, possible_results: &[&[usize]]) {
         for initial_state in ALL_PERMUTATIONS {
             let mut ranking = initial_state.to_vec();
-            Election::rank_candidates(&mut ranking[..], paths);
+            Election::<SimpleRank>::rank_candidates(&mut ranking[..], paths);
             assert!(
                 possible_results.contains(&&ranking[..]),
                 "{:?} not in {:?}",
@@ -298,7 +298,7 @@ mod tests {
         for i in 0..nomination_count {
             nomination.nominate(format!("{}", i));
         }
-        let mut election = nomination.build();
+        let mut election = nomination.election();
 
         for i in 0..ballots_count {
             let ballot = election.new_ballot();

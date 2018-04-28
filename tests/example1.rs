@@ -17,7 +17,7 @@ fn example1() {
         .nominate("C")
         .nominate("D")
         .nominate("E");
-    let mut election = nomination.build();
+    let mut election = nomination.election();
 
     rank(&mut election, 5, "ACBED");
     rank(&mut election, 5, "ADECB");

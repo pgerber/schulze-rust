@@ -14,10 +14,11 @@
 //!     .nominate("Ivy");
 //!
 //! // create election
-//! let election = nomination.build();
+//! let election = nomination.election();
 //! ```
 
 use election::Election;
+use rank::Rank;
 use Candidate;
 
 /// Nomination of candidates
@@ -52,7 +53,28 @@ impl Nomination {
     }
 
     /// Create election
-    pub fn build(self) -> Election {
+    pub fn election(self) -> Election {
+        Election::new(self.candidates)
+    }
+
+    /// Create election with custom `Rank`ing
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// extern crate schulze;
+    ///
+    /// use schulze::Nomination;
+    /// use schulze::rank::SimpleRank;
+    ///
+    /// let mut nomination = Nomination::new();
+    /// nomination
+    ///    .nominate("Lea")
+    ///    .nominate("Nora")
+    ///    .nominate("Zahra");
+    /// let mut election = nomination.election_with_ranking::<SimpleRank>();
+    /// ```
+    pub fn election_with_ranking<R: Rank>(self) -> Election<R> {
         Election::new(self.candidates)
     }
 }
@@ -68,7 +90,7 @@ mod tests {
             .nominate("Dianne Summer")
             .nominate("John Winter")
             .nominate("Ivy Spring");
-        let election = nomination.build();
+        let election = nomination.election();
 
         assert_eq!(
             election
