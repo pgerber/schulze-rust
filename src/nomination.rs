@@ -26,9 +26,9 @@ pub struct Nomination {
     candidates: Vec<Candidate>,
 }
 
+#[cfg_attr(feature = "clippy", allow(new_without_default_derive))]
 impl Nomination {
     /// Create new nomination.
-    #[cfg_attr(feature = "clippy", allow(new_without_default_derive))]
     pub fn new() -> Self {
         Nomination { candidates: Vec::new() }
     }
@@ -40,9 +40,9 @@ impl Nomination {
     /// Panics if `name` has been nominated already.
     pub fn nominate<T>(&mut self, name: T) -> &mut Self
     where
-        T: ToString,
+        T: Into<String>,
     {
-        let candidate = Candidate { name: name.to_string() };
+        let candidate = Candidate { name: name.into() };
         assert!(
             !self.candidates.contains(&candidate),
             "can't add second candidate with name {:?}",

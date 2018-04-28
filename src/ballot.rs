@@ -37,9 +37,9 @@ impl<R> Ballot<R> {
     /// ```
     pub fn set_name<T>(&mut self, name: T) -> &mut Self
     where
-        T: ToString,
+        T: Into<String>,
     {
-        self.name = Some(name.to_string());
+        self.name = Some(name.into());
         self
     }
 
